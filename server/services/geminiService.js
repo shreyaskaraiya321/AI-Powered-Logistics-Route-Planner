@@ -6,13 +6,47 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function callGeminiAndSave(type, relatedRouteId, relatedOrderId, promptText) {
   try {
-    console.log('Calling Gemini API (Pro) for type:', type);
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: promptText,
-    });
+    console.log('Using STUBBED Gemini API for type:', type);
     
-    const responseText = response.text;
+    // TODO: REVERT THIS STUB ONCE API KEY ISSUE IS RESOLVED
+    // Temporary fallback - not the real implementation.
+    
+    const distanceMatch = promptText.match(/Distance:\s*([\d.]+)/i);
+    const durationMatch = promptText.match(/Duration:\s*([\d.]+)/i);
+    const stopsMatch = promptText.match(/Stops:\s*(\d+)/i) || promptText.match(/sequence:\s*(.+)/i);
+    const loadMatch = promptText.match(/load/i) ? "heavy load" : "standard load";
+    
+    const dist = distanceMatch ? distanceMatch[1] : (Math.floor(Math.random() * 50) + 10);
+    const dur = durationMatch ? durationMatch[1] : (Math.floor(Math.random() * 120) + 30);
+    
+    let stops = 1;
+    if (stopsMatch) {
+      if (!isNaN(parseInt(stopsMatch[1]))) {
+        stops = parseInt(stopsMatch[1]);
+      } else {
+        stops = stopsMatch[1].split(',').length;
+      }
+    } else {
+      stops = Math.floor(Math.random() * 10) + 1;
+    }
+    
+    const randId = Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    let responseText = "";
+    if (type === 'route-explanation') {
+      responseText = `[STUB - ID:${randId}] The generated route is fully optimized. It covers a total distance of ${dist} units and will take approximately ${dur} minutes for ${stops} stops. The ${loadMatch} capacity and time window constraints have been successfully met.`;
+    } else if (type === 'dispatcher-summary') {
+      responseText = `[STUB - ID:${randId}]\n- Status: Optimized\n- Stops: ${stops}\n- Est. Time: ${dur} mins\n- Distance: ${dist} units`;
+    } else if (type === 'driver-summary') {
+      responseText = `[STUB - ID:${randId}] Hey driver! Your shift today includes ${stops} stops over ${dist} units. Expect it to take around ${dur} mins. Drive safely!`;
+    } else if (type === 'exception-message') {
+      responseText = `[STUB - ID:${randId}] An exception was logged for this destination. Please hold the package and contact dispatch immediately.`;
+    } else if (type === 'customer-update') {
+      responseText = `[STUB - ID:${randId}] Hello! There is an update regarding your delivery status. Please check your tracking link for more details.`;
+    } else {
+      responseText = `[STUB - ID:${randId}] Fallback response for ${type}. Details: ${dist} units, ${dur} mins.`;
+    }
+    
     const record = await AiGeneration.create({
       type,
       relatedRouteId,
@@ -23,8 +57,12 @@ async function callGeminiAndSave(type, relatedRouteId, relatedOrderId, promptTex
     
     return record;
   } catch (error) {
-    console.error('Gemini API Error:', error);
-    throw new Error('Failed to generate AI content');
+    const rawMsg = error?.message || String(error);
+    console.error('=== GEMINI RAW ERROR ===');
+    console.error('Status:', error?.status);
+    console.error('Message:', rawMsg);
+    console.error('========================');
+    throw new Error(`Gemini Error [${error?.status}]: ${rawMsg}`);
   }
 }
 
