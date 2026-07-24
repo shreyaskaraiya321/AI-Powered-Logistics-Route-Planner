@@ -30,8 +30,9 @@ function App() {
               <Route path="history" element={<History />} />
               <Route path="profile" element={<Profile />} />
             </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>
