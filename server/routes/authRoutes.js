@@ -15,7 +15,10 @@ router.get('/me', protect, (req, res) => {
     name: req.user.name,
     email: req.user.email,
     role: req.user.role,
+    createdAt: req.user.createdAt,
   });
 });
+
+router.get('/users', protect, require('../controllers/authController').getUsers);
 
 module.exports = router;

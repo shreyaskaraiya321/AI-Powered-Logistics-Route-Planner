@@ -51,6 +51,7 @@ const register = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        createdAt: user.createdAt,
         token: generateToken(user._id),
       });
     } else {
@@ -77,6 +78,7 @@ const login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        createdAt: user.createdAt,
         token: generateToken(user._id),
       });
     } else {
@@ -93,8 +95,18 @@ const logout = (req, res) => {
   res.json({ message: 'Logged out successfully' });
 };
 
+const getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({}).select('-passwordHash');
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
-  logout
+  logout,
+  getUsers
 };

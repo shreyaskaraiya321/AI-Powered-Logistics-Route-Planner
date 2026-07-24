@@ -13,11 +13,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [lists, setLists] = useState({ activeRoutes: [], pendingOrders: [] });
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        // We fetch all to derive counts based on the user's role logic enforced by the backend
         const [ordersRes, routesRes, vehiclesRes] = await Promise.all([
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes').catch(() => ({ data: [] })),
@@ -28,13 +29,18 @@ export default function Dashboard() {
         const routes = routesRes.data || [];
         const vehicles = vehiclesRes.data || [];
 
-        const pendingOrders = orders.filter(o => o.status === 'pending').length;
-        const activeRoutes = routes.filter(r => r.status !== 'delivered' && r.status !== 'failed').length;
+        const pendingOrders = orders.filter(o => o.status === 'pending');
+        const activeRoutes = routes.filter(r => r.status !== 'delivered' && r.status !== 'failed');
 
         setStats({
-          activeRoutes,
-          pendingOrders,
+          activeRoutes: activeRoutes.length,
+          pendingOrders: pendingOrders.length,
           totalVehicles: vehicles.length
+        });
+
+        setLists({
+          activeRoutes,
+          pendingOrders
         });
       } catch (err) {
         setError('Failed to load dashboard statistics.');
@@ -97,6 +103,56 @@ export default function Dashboard() {
             color="text-green-400" 
             bgColor="bg-green-400/10" 
           />
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        {/* Active Routes List */}
+        <div className="glass-panel rounded-2xl p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Active Routes</h2>
+          {lists.activeRoutes.length === 0 ? (
+            <p className="text-gray-400 text-sm">No active routes at the moment.</p>
+          ) : (
+            <div className="space-y-3">
+              {lists.activeRoutes.map((route) => (
+                <div key={route._id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent/30 transition-colors">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-medium text-white truncate max-w-[150px]">Route {route._id.slice(-6)}</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 capitalize">{route.status}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 flex flex-col gap-1">
+                    <span>{route.stopOrder?.length || 0} stops • {route.estimatedDuration || 0} mins</span>
+                    <span>Assigned to: {route.driverId ? (typeof route.driverId === 'object' ? route.driverId.name : 'Driver Assigned') : 'Unassigned'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Pending Orders List (Hidden for drivers) */}
+        {user?.role !== 'driver' && (
+          <div className="glass-panel rounded-2xl p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Pending Orders</h2>
+            {lists.pendingOrders.length === 0 ? (
+              <p className="text-gray-400 text-sm">No pending orders.</p>
+            ) : (
+              <div className="space-y-3">
+                {lists.pendingOrders.map((order) => (
+                  <div key={order._id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-orange-400/30 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-sm font-medium text-white truncate">Order {order._id.slice(-6)}</span>
+                      <span className="text-xs text-orange-300 bg-orange-400/20 px-2 py-1 rounded-full">{order.loadDetails || 'Package'}</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      <p>From: <span className="text-gray-200">{order.origin}</span></p>
+                      <p>To: <span className="text-gray-200">{order.destination}</span></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
