@@ -1,9 +1,15 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, Package, History, User } from 'lucide-react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Map, Package, History, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Planner', path: '/planner', icon: Map },
@@ -51,14 +57,24 @@ export default function Layout() {
              
           </div>
           
-          <div className="flex items-center gap-4 glass-panel px-4 py-2 rounded-full cursor-pointer hover:bg-white/10 transition-colors">
-             <div className="text-right">
-               <div className="text-sm font-medium text-white">{user?.name || 'User'}</div>
-               <div className="text-xs text-accent capitalize">{user?.role || 'Guest'}</div>
-             </div>
-             <div className="w-9 h-9 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
-               <User className="w-5 h-5 text-accent" />
-             </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 glass-panel px-4 py-2 rounded-full cursor-pointer hover:bg-white/10 transition-colors">
+               <div className="text-right">
+                 <div className="text-sm font-medium text-white">{user?.name || 'User'}</div>
+                 <div className="text-xs text-accent capitalize">{user?.role || 'Guest'}</div>
+               </div>
+               <div className="w-9 h-9 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
+                 <User className="w-5 h-5 text-accent" />
+               </div>
+            </div>
+            
+            <button 
+              onClick={handleLogout}
+              className="p-2 rounded-full glass-panel hover:bg-red-500/20 hover:text-red-400 transition-colors text-gray-400"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </header>
 
