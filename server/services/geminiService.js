@@ -6,7 +6,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function callGeminiAndSave(type, relatedRouteId, relatedOrderId, promptText) {
   try {
-    console.log('Calling Gemini API for type:', type);
+    console.log('Calling Gemini API (Pro) for type:', type);
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: promptText,
